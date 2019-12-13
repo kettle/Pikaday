@@ -307,6 +307,9 @@
     {
         var arr = [];
         var ariaSelected = 'false';
+        var ariaDisabled = 'false';
+        var ariaLabel = (opts.isDisabled ? 'Disabled. ' : (opts.isSelected ? 'Selected. ' : '')) +
+            opts.i18n.weekdays[opts.weekDay] + ' ' + opts.day + ', ' + opts.i18n.months[opts.month] + ' ' + opts.year;
         if (opts.isEmpty) {
             if (opts.showDaysInNextAndPreviousMonths) {
                 arr.push('is-outside-current-month');
@@ -321,6 +324,7 @@
         }
         if (opts.isDisabled) {
             arr.push('is-disabled');
+            ariaDisabled = 'true';
         }
         if (opts.isToday) {
             arr.push('is-today');
@@ -341,8 +345,10 @@
         if (opts.isEndRange) {
             arr.push('is-endrange');
         }
-        return '<td data-day="' + opts.day + '" class="' + arr.join(' ') + '" aria-selected="' + ariaSelected + '">' +
+
+        return '<td data-day="' + opts.day + '" class="' + arr.join(' ') + '">' +
                  '<button class="pika-button pika-day" type="button" ' +
+                    'aria-label="'+ ariaLabel +'" aria-selected="' + ariaSelected + '" aria-disabled="' + ariaDisabled + '" ' +
                     'data-pika-year="' + opts.year + '" data-pika-month="' + opts.month + '" data-pika-day="' + opts.day + '">' +
                         opts.day +
                  '</button>' +
@@ -402,9 +408,9 @@
             arr.push('<th></th>');
         }
         for (i = 0; i < 7; i++) {
-            arr.push('<th scope="col"><abbr title="' + renderDayName(opts, i) + '">' + renderDayName(opts, i, true) + '</abbr></th>');
+            arr.push('<th><abbr title="' + renderDayName(opts, i) + '">' + renderDayName(opts, i, true) + '</abbr></th>');
         }
-        return '<thead><tr>' + (opts.isRTL ? arr.reverse() : arr).join('') + '</tr></thead>';
+        return '<thead aria-hidden="true"><tr>' + (opts.isRTL ? arr.reverse() : arr).join('') + '</tr></thead>';
     },
 
     renderTitle = function(instance, c, year, month, refYear, randId)
@@ -413,11 +419,19 @@
             opts = instance._o,
             isMinYear = year === opts.minYear,
             isMaxYear = year === opts.maxYear,
-            html = '<div id="' + randId + '" class="pika-title" role="heading" aria-live="assertive">',
+            html = '<div id="' + randId + '" class="pika-title">',
             monthHtml,
             yearHtml,
             prev = true,
             next = true;
+
+        if (isMinYear && (month === 0 || opts.minMonth >= month)) {
+            prev = false;
+        }
+
+        if (c === 0) {
+            html += '<button class="pika-prev' + (prev ? '' : ' is-disabled') + '" aria-label="' + opts.i18n.previousMonth + '" aria-disabled="' + (prev ? 'false' : 'true') + '" type="button"></button>';
+        }
 
         for (arr = [], i = 0; i < 12; i++) {
             arr.push('<option value="' + (year === refYear ? i - c : 12 + i - c) + '"' +
@@ -426,7 +440,7 @@
                 opts.i18n.months[i] + '</option>');
         }
 
-        monthHtml = '<div class="pika-label">' + opts.i18n.months[month] + '<select class="pika-select pika-select-month" tabindex="-1">' + arr.join('') + '</select></div>';
+        monthHtml = '<div class="pika-label"><span aria-hidden="true">' + opts.i18n.months[month] + '</span><select class="pika-select pika-select-month" tabindex="-1" aria-label="Month">' + arr.join('') + '</select></div>';
 
         if (isArray(opts.yearRange)) {
             i = opts.yearRange[0];
@@ -441,7 +455,7 @@
                 arr.push('<option value="' + i + '"' + (i === year ? ' selected="selected"': '') + '>' + (i) + '</option>');
             }
         }
-        yearHtml = '<div class="pika-label">' + year + opts.yearSuffix + '<select class="pika-select pika-select-year" tabindex="-1">' + arr.join('') + '</select></div>';
+        yearHtml = '<div class="pika-label"><span aria-hidden="true">' + year + opts.yearSuffix + '</span><select class="pika-select pika-select-year" tabindex="-1" aria-label="Year">' + arr.join('') + '</select></div>';
 
         if (opts.showMonthAfterYear) {
             html += yearHtml + monthHtml;
@@ -449,27 +463,20 @@
             html += monthHtml + yearHtml;
         }
 
-        if (isMinYear && (month === 0 || opts.minMonth >= month)) {
-            prev = false;
-        }
-
         if (isMaxYear && (month === 11 || opts.maxMonth <= month)) {
             next = false;
         }
 
-        if (c === 0) {
-            html += '<button class="pika-prev' + (prev ? '' : ' is-disabled') + '" type="button">' + opts.i18n.previousMonth + '</button>';
-        }
         if (c === (instance._o.numberOfMonths - 1) ) {
-            html += '<button class="pika-next' + (next ? '' : ' is-disabled') + '" type="button">' + opts.i18n.nextMonth + '</button>';
+            html += '<button class="pika-next' + (next ? '' : ' is-disabled') + '" aria-label="' + opts.i18n.previousMonth + '" aria-disabled="' + (prev ? 'false' : 'true') + '" type="button"></button>';
         }
 
         return html += '</div>';
     },
 
-    renderTable = function(opts, data, randId)
+    renderTable = function(opts, data)
     {
-        return '<table cellpadding="0" cellspacing="0" class="pika-table" role="grid" aria-labelledby="' + randId + '">' + renderHead(opts) + renderBody(data) + '</table>';
+        return '<table cellpadding="0" cellspacing="0" class="pika-table" role="presentation">' + renderHead(opts) + renderBody(data) + '</table>';
     },
 
 
@@ -660,6 +667,10 @@
         addEvent(self.el, 'mousedown', self._onMouseDown, true);
         addEvent(self.el, 'touchend', self._onMouseDown, true);
         addEvent(self.el, 'change', self._onChange);
+
+        self.el.setAttribute('role', 'application');
+        self.el.setAttribute('aria-roledescription', 'datepicker');
+        self.el.setAttribute('aria-label', 'Calendar');
 
         if (opts.keyboardInput) {
             addEvent(document, 'keydown', self._onKeyChange);
@@ -1132,7 +1143,7 @@
         /**
          * render HTML for a particular month
          */
-        render: function(year, month, randId)
+        render: function(year, month)
         {
             var opts   = this._o,
                 now    = new Date(),
@@ -1167,6 +1178,7 @@
                     hasEvent = opts.events.indexOf(day.toDateString()) !== -1 ? true : false,
                     isEmpty = i < before || i >= (days + before),
                     dayNumber = 1 + (i - before),
+                    weekDay = day.getDay(),
                     monthNumber = month,
                     yearNumber = year,
                     isStartRange = opts.startRange && compareDates(opts.startRange, day),
@@ -1193,6 +1205,7 @@
                         day: dayNumber,
                         month: monthNumber,
                         year: yearNumber,
+                        weekDay: weekDay,
                         hasEvent: hasEvent,
                         isSelected: isSelected,
                         isToday: isToday,
@@ -1202,7 +1215,8 @@
                         isEndRange: isEndRange,
                         isInRange: isInRange,
                         showDaysInNextAndPreviousMonths: opts.showDaysInNextAndPreviousMonths,
-                        enableSelectionDaysInNextAndPreviousMonths: opts.enableSelectionDaysInNextAndPreviousMonths
+                        enableSelectionDaysInNextAndPreviousMonths: opts.enableSelectionDaysInNextAndPreviousMonths,
+                        i18n: opts.i18n
                     };
 
                 if (opts.pickWholeWeek && isSelected) {
@@ -1221,7 +1235,7 @@
                     isWeekSelected = false;
                 }
             }
-            return renderTable(opts, data, randId);
+            return renderTable(opts, data);
         },
 
         isVisible: function()
