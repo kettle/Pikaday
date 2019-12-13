@@ -76,6 +76,7 @@ $pd-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !default;
 }
 
 .pika-title {
+    display: inline-block;
     position: relative;
     text-align: center;
 
@@ -88,6 +89,10 @@ $pd-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !default;
         top: 5px;
         opacity: 0;
     }
+}
+
+.pika-today-wrap{
+    display: inline-block;
 }
 
 .pika-label {
