@@ -474,6 +474,17 @@
         return html += '</div>';
     },
 
+    renderToday = function(activeDate, opts)
+    {
+        const today = opts.moment().toDate();
+        const isToday = activeDate.getDate() === today.getDate() &&
+            activeDate.getMonth() === today.getMonth() &&
+            activeDate.getFullYear() === today.getFullYear();
+        const isDisabled = opts.disableDayFn(today);
+
+        return '<div class="pika-today-wrap"><a class="pika-today' + ( isToday ? ' is-today' : '' ) + ( isDisabled ? ' disabled' : '' ) + '">Today</span></div>';
+    },
+
     renderTable = function(opts, data)
     {
         return '<table cellpadding="0" cellspacing="0" class="pika-table" role="presentation">' + renderHead(opts) + renderBody(data) + '</table>';
@@ -516,6 +527,9 @@
                 }
                 else if (hasClass(target, 'pika-next')) {
                     self.nextMonth();
+                }
+                else if (hasClass(target, 'pika-today')) {
+                    self.gotoToday();
                 }
             }
             if (!hasClass(target, 'pika-select')) {
@@ -1057,7 +1071,7 @@
 
             for (var c = 0; c < opts.numberOfMonths; c++) {
                 randId = 'pika-title-' + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 2);
-                html += '<div class="pika-lendar">' + renderTitle(this, c, this.calendars[c].year, this.calendars[c].month, this.calendars[0].year, randId) + this.render(this.calendars[c].year, this.calendars[c].month, randId) + '</div>';
+                html += '<div class="pika-lendar">' + renderTitle(this, c, this.calendars[c].year, this.calendars[c].month, this.calendars[0].year, randId) + renderToday(this._d, this._o) + this.render(this.calendars[c].year, this.calendars[c].month, randId) + '</div>';
             }
 
             this.el.innerHTML = html;
