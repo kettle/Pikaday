@@ -529,7 +529,7 @@
                     self.nextMonth();
                 }
                 else if (hasClass(target, 'pika-today')) {
-                    self.gotoToday();
+                    self.setDate(self._o.moment().toDate());
                 }
             }
             if (!hasClass(target, 'pika-select')) {
