@@ -687,7 +687,7 @@
         self.el.setAttribute('aria-label', 'Calendar');
 
         if (opts.keyboardInput) {
-            addEvent(document, 'keydown', self._onKeyChange);
+            addEvent(self.el, 'keydown', self._onKeyChange);
         }
 
         if (opts.field) {
@@ -1303,7 +1303,7 @@
             removeEvent(this.el, 'touchend', this._onMouseDown, true);
             removeEvent(this.el, 'change', this._onChange);
             if (opts.keyboardInput) {
-                removeEvent(document, 'keydown', this._onKeyChange);
+                removeEvent(this.el, 'keydown', this._onKeyChange);
             }
             if (opts.field) {
                 removeEvent(opts.field, 'change', this._onInputChange);
